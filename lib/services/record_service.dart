@@ -55,7 +55,6 @@ class RecordService {
         'Authorization': 'Bearer $token',
       },
     );
-    print("Response: ${response.body}");
     if (response.statusCode == 200) {
       Map<String, dynamic> body = json.decode(response.body);
       List<dynamic> recordsList = body['records'];
@@ -68,7 +67,6 @@ class RecordService {
         print(record);
         return record;
       }).toList();
-
       return convertedRecords;
     } else {
       throw Exception('Failed to load records');

@@ -8,7 +8,6 @@ import 'package:greenhouse/screens/crops/crops_in_progress.dart';
 import 'package:greenhouse/screens/menu/dashboard.dart';
 import 'package:greenhouse/screens/menu/login.dart';
 import 'package:greenhouse/screens/crops/records.dart';
-import 'package:greenhouse/screens/menu/sign_up.dart';
 import 'package:greenhouse/screens/crops/stepper.dart';
 import 'package:greenhouse/screens/profiles/company_profile.dart';
 import 'package:greenhouse/screens/profiles/user_profile.dart';
@@ -39,9 +38,6 @@ class MyApp extends StatelessWidget {
             break;
           case '/login':
             builder = (BuildContext _) => LoginScreen();
-            break;
-          case '/signup':
-            builder = (BuildContext _) => SignUpScreen();
             break;
           case '/dashboard':
             builder = (BuildContext _) => Dashboard();

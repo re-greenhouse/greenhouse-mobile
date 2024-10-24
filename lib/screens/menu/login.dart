@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:greenhouse/screens/menu/sign_up.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:greenhouse/widgets/navigation_button.dart';
 import 'package:greenhouse/services/auth_service.dart';
@@ -153,25 +152,6 @@ class _LoginScreenState extends State<LoginScreen> {
               margin: EdgeInsets.only(left: 10),
               height: 2,
               color: Color(0xFF7DA257),
-            ),
-          ],
-        ),
-        Column(
-          children: [
-            TextButton(
-              onPressed: () {
-                Navigator.push(context,
-                    MaterialPageRoute(builder: (context) => SignUpScreen()));
-              },
-              child: Text("SIGN UP",
-                  style: TextStyle(color: Colors.grey, fontSize: 14)),
-            ),
-            SizedBox(height: 5),
-            Container(
-              width: containerWidth,
-              margin: EdgeInsets.only(right: 10),
-              height: 2,
-              color: Colors.grey,
             ),
           ],
         ),
