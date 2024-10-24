@@ -72,4 +72,60 @@ class RecordService {
       throw Exception('Failed to load records');
     }
   }
+
+  Future<Record> createRecord(String phase, String cropId, Payload payload) async {
+  final token = await UserPreferences.getToken();
+  final author = await UserPreferences.getUsername();
+  if (author == null) throw Exception('Failed to get author');
+  if (phase == 'Formula') {
+    phase = 'formula';
+  } else if (phase == 'Preparation Area') {
+    phase = 'preparation_area';
+  } else if (phase == 'Bunker') {
+    phase = 'bunker';
+  } else if (phase == 'Tunnel') {
+    phase = 'tunnel';
+  } else if (phase == 'Incubation') {
+    phase = 'incubation';
+  } else if (phase == 'Casing') {
+    phase = 'casing';
+  } else if (phase == 'Induction') {
+    phase = 'induction';
+  } else if (phase == 'Harvest') {
+    phase = 'harvest';
+  }
+  final record = Record(author: author, phase: phase, payload: payload, cropId: cropId);
+  final response = await http.post(
+    Uri.parse('${baseUrl}records'),
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer $token',
+    },
+    body: jsonEncode(record.toJson()),
+  );
+
+  if (response.statusCode != 201) {
+    throw Exception('Failed to create record');
+  }
+
+
+  Map<String, dynamic> bodyResponse = json.decode(response.body);
+
+  DateTime createdFormattedDate =
+  DateFormat('M/d/yyyy, h:mm a').parseUtc(bodyResponse['createdDate']);
+  createdFormattedDate = createdFormattedDate.add(Duration(hours: -5));
+  DateTime updatedFormattedDate =
+  DateFormat('M/d/yyyy, h:mm a').parseUtc(bodyResponse['updatedDate']);
+  updatedFormattedDate = updatedFormattedDate.add(Duration(hours: -5));
+
+  Record newRecord = Record(
+    id: bodyResponse['id'],
+    createdDate:  DateFormat('M/d/yyyy, h:mm a').format(createdFormattedDate),
+    updatedDate: DateFormat('M/d/yyyy, h:mm a').format(updatedFormattedDate),
+    author: bodyResponse['author'],
+    phase: bodyResponse['phase'],
+    payload: Payload.fromJson(json.decode(bodyResponse['payload'])),
+  );
+  return newRecord;
+}
 }

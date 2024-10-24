@@ -2,7 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:greenhouse/widgets/bottom_navigation_bar.dart';
 import 'package:greenhouse/widgets/record_card.dart';
 import 'package:greenhouse/models/record.dart';
-import 'package:greenhouse/services/record_service.dart'; // Import the RecordService
+import 'package:greenhouse/services/record_service.dart';
+import 'package:greenhouse/widgets/add_record_dialog.dart';
+
+import '../../services/crop_service.dart'; // Import the AddRecordDialog
 
 class RecordsScreen extends StatefulWidget {
   final String cropId;
@@ -18,22 +21,48 @@ class _RecordsScreenState extends State<RecordsScreen> {
   String searchQuery = '';
   List<Record> records = [];
   final RecordService recordService = RecordService();
+  final CropService cropService = CropService();
+  bool state = false;
 
   @override
   void initState() {
+    getCropState();
     super.initState();
     loadRecords();
+  }
+
+  Future<void> getCropState() async {
+    var crop = await cropService.getCropById(widget.cropId);
+    state = crop.state;
+    setState(() {});
   }
 
   void loadRecords() async {
     try {
       records = await recordService.getRecordsByCropAndPhase(
           widget.cropId, widget.cropPhase);
-      print("Records loaded: $records");
       setState(() {});
+
     } catch (e) {
       print('Failed to load records: $e');
     }
+  }
+
+  void showAddRecordDialog() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AddRecordDialog(
+          cropPhase: widget.cropPhase,
+          cropId: widget.cropId,
+          onRecordAdded: (Record newRecord) {
+            setState(() {
+              records.add(newRecord);
+            });
+          },
+        );
+      },
+    );
   }
 
   @override
@@ -110,6 +139,8 @@ class _RecordsScreenState extends State<RecordsScreen> {
               ],
             ),
           ),
+          if(state)
+            ElevatedButton(onPressed: showAddRecordDialog, child: Text('Add Record')),
           ...records
               .where((record) =>
                   record.id.contains(searchQuery) ||

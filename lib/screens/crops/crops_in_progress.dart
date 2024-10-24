@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:greenhouse/models/crop_phase.dart';
+import 'package:greenhouse/widgets/create_crop_dialog.dart';
 import 'package:greenhouse/widgets/bottom_navigation_bar.dart';
 import 'package:greenhouse/widgets/crop_card.dart';
 
 import '../../services/crop_service.dart';
+import '../../models/crop.dart';
 
 class CropsInProgress extends StatefulWidget {
   const CropsInProgress({super.key});
@@ -42,6 +44,7 @@ class _CropsInProgressState extends State<CropsInProgress> {
                 startDate: parseDate(crop.createdDate),
                 phase: stringToCropCurrentPhase(crop.phase),
                 name: crop.name,
+                state: crop.state,
                 onDelete: (String
                     id) {}, //its only there as a placeholder it really does nothing as it shouldn't be able to delete from the crops in progress
               ))
@@ -130,6 +133,26 @@ class _CropsInProgressState extends State<CropsInProgress> {
                 ],
               ),
             ),
+            ElevatedButton(onPressed: () async {
+              Crop? newCrop = await showDialog<Crop>(
+                context: context,
+                builder: (BuildContext context) {
+                  return CreateCropDialog();
+                }
+              );
+              if (newCrop != null) {
+                setState(() {
+                  cropCards.add(CropCard(
+                    id: newCrop.id,
+                    startDate: parseDate(newCrop.createdDate),
+                    phase: stringToCropCurrentPhase(newCrop.phase),
+                    name: newCrop.name,
+                    state: newCrop.state,
+                    onDelete: (String id) {},
+                  ));
+                });
+              }
+            }, child: Text('Create New Crop')),
             ...cropCards.where((cropCard) =>
                 cropCard.startDate.contains(searchQuery) ||
                 cropCard.name.contains(searchQuery)),

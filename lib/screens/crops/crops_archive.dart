@@ -39,6 +39,7 @@ class _CropsArchiveState extends State<CropsArchive> {
                 startDate: parseDate(crop.createdDate),
                 phase: stringToCropCurrentPhase(crop.phase),
                 name: crop.name,
+                state: crop.state,
                 onDelete: (String id) {
                   setState(() {
                     cropCards.removeWhere((card) => card.id == id);

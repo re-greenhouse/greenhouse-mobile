@@ -8,6 +8,7 @@ class CropCard extends StatefulWidget {
   final CropCurrentPhase phase;
   final String id;
   final String name;
+  final bool state;
   final Function(String) onDelete;
 
   const CropCard(
@@ -16,6 +17,7 @@ class CropCard extends StatefulWidget {
       required this.phase,
       required this.id,
       required this.name,
+      required this.state,
       required this.onDelete});
 
   @override

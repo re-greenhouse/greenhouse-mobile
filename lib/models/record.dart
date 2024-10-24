@@ -10,6 +10,11 @@ class PayloadData {
       value: json['value'].toString(),
     );
   }
+
+  Map<String, dynamic> toJson() => {
+    'name': name,
+    'value': value,
+  };
 }
 
 class Payload {
@@ -23,23 +28,29 @@ class Payload {
         list.map((i) => PayloadData.fromJson(i)).toList();
     return Payload(data: dataList);
   }
+
+  Map<String, dynamic> toJson() => {
+    'data': data.map((item) => item.toJson()).toList(),
+  };
 }
 
 class Record {
-  final String id;
-  final String author;
-  final String createdDate;
+  String id;
+  String author;
+  String createdDate;
   String updatedDate;
   final String phase;
   final Payload payload;
+  String cropId = '';
 
   Record({
-    required this.id,
+    this.id = '',
     required this.author,
-    required this.createdDate,
-    required this.updatedDate,
+    this.createdDate = '',
+    this.updatedDate = '',
     required this.phase,
     required this.payload,
+    this.cropId = '',
   });
 
   factory Record.fromJson(Map<String, dynamic> json) {
@@ -52,4 +63,11 @@ class Record {
       payload: Payload.fromJson(json['payload']),
     );
   }
+
+  Map<String, dynamic> toJson() => {
+    'author': author,
+    'phase': phase,
+    'payload': payload.toJson(),
+    'cropId': cropId,
+  };
 }

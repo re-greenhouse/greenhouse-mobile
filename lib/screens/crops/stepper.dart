@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:greenhouse/models/crop_phase.dart';
+import 'package:greenhouse/services/crop_service.dart';
 import 'package:greenhouse/widgets/bottom_navigation_bar.dart';
 import 'package:greenhouse/widgets/message_response.dart';
 import '../../widgets/crop_card.dart';
@@ -50,6 +51,7 @@ class _StepperWidgetState extends State<StepperWidget> {
               Navigator.pushNamed(context, '/records', arguments: {
                 'cropId': chosenCrop?.id ?? '',
                 'cropPhase': item.phaseName,
+                'state': chosenCrop?.state ?? '',
               });
             },
           ),
@@ -114,6 +116,7 @@ class _StepperWidgetState extends State<StepperWidget> {
 class StepperTitle extends StatelessWidget {
   final CropCard crop;
   final BuildContext context;
+  final CropService cropService = CropService();
 
   StepperTitle({required this.crop, required this.context});
 
@@ -127,8 +130,10 @@ class StepperTitle extends StatelessWidget {
           _buildStepperInfo(),
           SizedBox(height: 20),
           _buildStartDateInfo(),
-          if (crop.phase.phaseName != "Formula")
-            _buildMoveToPreviousCropPhase(context),
+            if (crop.phase.phaseName != "Formula" && crop.state == true)
+              _buildMoveToPreviousCropPhase(context),
+          if(crop.state == true)
+              _buildMoveToNextPhase(context),
         ],
       ),
     );
@@ -148,7 +153,7 @@ class StepperTitle extends StatelessWidget {
         ),
         SizedBox(height: 10),
         Text(
-          'Crop Name: ${crop.id}',
+          'Crop Name: ${crop.name}',
           style: TextStyle(
             color: Color(0xFF444444),
             fontSize: 16,
@@ -194,9 +199,20 @@ class StepperTitle extends StatelessWidget {
             context,
             "Are you sure you want to\nmove to previous crop phase? \n\nAll records from ${crop.phase.phaseName} \nphase will be lost.",
             "Yes, Go Back",
-            () {
+            () async {
               //TODO: Delete all records from current phase and move to previous phase
-              Navigator.of(context).pop();
+              CropCurrentPhase previousPhase = CropCurrentPhase.values[
+              CropCurrentPhase.values.indexOf(crop.phase) - 1];
+              await cropService.updateCropPhase(
+                crop.id,
+                previousPhase.phaseName,
+                true,
+              );
+              //chosenCrop.phaseName = previousPhase.phaseName;
+              Navigator.pushNamed(context, '/records', arguments: {
+                'cropId': crop.id,
+                'cropPhase': previousPhase.phaseName,
+              });
             },
           );
         },
@@ -209,6 +225,54 @@ class StepperTitle extends StatelessWidget {
         ),
         child: Text(
           "Move to previous phase",
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+            color: Color(0xFFB07D50),
+          ),
+        ),
+      ),
+    );
+  }
+  Widget _buildMoveToNextPhase(BuildContext context) {
+    bool isLastPhase = crop.phase == CropCurrentPhase.harvest;
+    return Padding(
+      padding: const EdgeInsets.only(top: 20, bottom: 20),
+      child: OutlinedButton(
+        onPressed: () async {
+          if (isLastPhase) {
+            await cropService.updateCropPhase(
+              crop.id,
+              crop.phase.phaseName,
+              false,
+            );
+            Navigator.pushNamed(context, '/records', arguments: {
+              'cropId': crop.id,
+              'cropPhase': crop.phase.phaseName,
+            });
+          } else {
+            CropCurrentPhase nextPhase = CropCurrentPhase.values[
+            CropCurrentPhase.values.indexOf(crop.phase) + 1];
+            await cropService.updateCropPhase(
+              crop.id,
+              nextPhase.phaseName,
+              true,
+            );
+            Navigator.pushNamed(context, '/records', arguments: {
+              'cropId': crop.id,
+              'cropPhase': nextPhase.phaseName,
+            });
+          }
+        },
+        style: OutlinedButton.styleFrom(
+          side: BorderSide(color: Color(0xFFB07D50)),
+          backgroundColor: Colors.white,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+        ),
+        child: Text(
+          isLastPhase ? "End Crop" : "Move to next phase",
           style: TextStyle(
             fontSize: 16,
             fontWeight: FontWeight.bold,
