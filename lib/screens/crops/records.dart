@@ -5,7 +5,7 @@ import 'package:greenhouse/models/record.dart';
 import 'package:greenhouse/services/record_service.dart';
 import 'package:greenhouse/widgets/add_record_dialog.dart';
 
-import '../../services/crop_service.dart'; // Import the AddRecordDialog
+import '../../services/crop_service.dart';
 
 class RecordsScreen extends StatefulWidget {
   final String cropId;
@@ -42,7 +42,6 @@ class _RecordsScreenState extends State<RecordsScreen> {
       records = await recordService.getRecordsByCropAndPhase(
           widget.cropId, widget.cropPhase);
       setState(() {});
-
     } catch (e) {
       print('Failed to load records: $e');
     }
@@ -139,8 +138,9 @@ class _RecordsScreenState extends State<RecordsScreen> {
               ],
             ),
           ),
-          if(state)
-            ElevatedButton(onPressed: showAddRecordDialog, child: Text('Add Record')),
+          if (state)
+            ElevatedButton(
+                onPressed: showAddRecordDialog, child: Text('Add Record')),
           ...records
               .where((record) =>
                   record.id.contains(searchQuery) ||

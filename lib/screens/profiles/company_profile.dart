@@ -1,9 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:greenhouse/models/company.dart';
 import 'package:greenhouse/models/profile.dart';
-import 'package:greenhouse/screens/profiles/add_coworker.dart';
-import 'package:greenhouse/screens/profiles/edit_company.dart';
-import 'package:greenhouse/screens/profiles/edit_coworker.dart';
 import 'package:greenhouse/services/company_service.dart';
 import 'package:greenhouse/services/profile_service.dart';
 import 'package:greenhouse/widgets/avatar.dart';
@@ -65,47 +62,6 @@ class _CompanyProfileScreenState extends State<CompanyProfileScreen> {
                     children: [
                       _companyInfo("Company name", company?.name ?? ''),
                       _companyInfo("TIN", company?.tin ?? ''),
-                      SizedBox(height: 20),
-                      Text(
-                        "Settings",
-                        style: TextStyle(
-                            fontSize: 20, fontWeight: FontWeight.bold),
-                      ),
-                      SizedBox(height: 20),
-                      InkWell(
-                        onTap: () {},
-                        child: Text(
-                          'Delete company',
-                          style: TextStyle(fontSize: 16, color: Colors.red),
-                        ),
-                      ),
-                      SizedBox(height: 20),
-                      SizedBox(
-                          width: MediaQuery.of(context).size.width * 0.7,
-                          child: ElevatedButton(
-                            style: ButtonStyle(
-                                backgroundColor: WidgetStateProperty.all<Color>(
-                                    Color(0xFF67864A)),
-                                shape: WidgetStateProperty.all<
-                                        RoundedRectangleBorder>(
-                                    RoundedRectangleBorder(
-                                        borderRadius:
-                                            BorderRadius.circular(18.0),
-                                        side: BorderSide(
-                                            color: Color(0xFF4C6444))))),
-                            onPressed: () async {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => EditCompanyScreen(),
-                                ),
-                              );
-                            },
-                            child: Text(
-                              'Edit company profile',
-                              style: TextStyle(color: Colors.white),
-                            ),
-                          )),
                       SizedBox(height: 40),
                     ],
                   ),
@@ -144,80 +100,50 @@ class _CompanyProfileScreenState extends State<CompanyProfileScreen> {
     return Padding(
       padding: const EdgeInsets.all(16.0),
       child: ListView.builder(
-        physics: NeverScrollableScrollPhysics(),
-        shrinkWrap: true,
-        itemCount: filteredCoworkers.length + 2,
-        itemBuilder: (context, index) {
-          if (index == 0) {
-            return Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Text('Employees',
-                        style: TextStyle(
-                            fontSize: 20, fontWeight: FontWeight.bold)),
-                  ),
-                  ElevatedButton(
-                    style: ButtonStyle(
-                        shape: WidgetStateProperty.all<RoundedRectangleBorder>(
-                            RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(18.0),
-                                side: BorderSide(color: Color(0xFF4C6444))))),
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => AddCoworkerScreen(),
-                        ),
-                      );
-                    },
-                    child: Text(
-                      "Invite Employees",
-                      style: TextStyle(color: Color(0xFF4C6444)),
+          physics: NeverScrollableScrollPhysics(),
+          shrinkWrap: true,
+          itemCount: filteredCoworkers.length + 2,
+          itemBuilder: (context, index) {
+            if (index == 0) {
+              return Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Text('Employees',
+                          style: TextStyle(
+                              fontSize: 20, fontWeight: FontWeight.bold)),
+                    ),
+                  ],
+                ),
+              );
+            } else if (index == 1) {
+              return Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: TextField(
+                  onChanged: (value) {
+                    setState(() {
+                      searchQuery = value;
+                    });
+                  },
+                  decoration: InputDecoration(
+                    hintText: 'Search employees...',
+                    prefixIcon: Icon(Icons.search),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8.0),
                     ),
                   ),
-                ],
-              ),
-            );
-          } else if (index == 1) {
-            return Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: TextField(
-                onChanged: (value) {
-                  setState(() {
-                    searchQuery = value;
-                  });
-                },
-                decoration: InputDecoration(
-                  hintText: 'Search employees...',
-                  prefixIcon: Icon(Icons.search),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8.0),
-                  ),
                 ),
-              ),
-            );
-          } else {
-            Profile coworker = filteredCoworkers[index - 2];
-            return GestureDetector(
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => EditCoworkerScreen(),
-                  ),
-                );
-              },
-              child: CoworkerCard(
+              );
+            } else {
+              Profile coworker = filteredCoworkers[index - 2];
+              return CoworkerCard(
                 name: '${coworker.firstName} ${coworker.lastName}',
                 role: coworker.role,
                 image: coworker.iconUrl,
-              ),
-            );
-          }
-        },
-      ),
+              );
+            }
+          }),
     );
   }
 

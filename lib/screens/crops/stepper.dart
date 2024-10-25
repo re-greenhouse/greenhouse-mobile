@@ -34,11 +34,15 @@ class _StepperWidgetState extends State<StepperWidget> {
     chosenCrop = widget.chosenCrop;
   }
 
+  void updatePhase() {
+    setState(() {
+      chosenCrop = chosenCrop;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     List<Widget> stepperChildren = [];
-
-    //stepperChildren.add(StepperTitle(crop: widget.chosenCrop, context: context));
 
     for (final item in itemsList) {
       if (double.parse(item.phaseNumber) <
@@ -51,7 +55,7 @@ class _StepperWidgetState extends State<StepperWidget> {
               Navigator.pushNamed(context, '/records', arguments: {
                 'cropId': chosenCrop?.id ?? '',
                 'cropPhase': item.phaseName,
-                'state': chosenCrop?.state ?? '',
+                'state': (chosenCrop?.state ?? '').toString(),
               });
             },
           ),
@@ -102,7 +106,11 @@ class _StepperWidgetState extends State<StepperWidget> {
         child: SingleChildScrollView(
           child: Column(
             children: [
-              StepperTitle(crop: widget.chosenCrop, context: context),
+              StepperTitle(
+                crop: chosenCrop!,
+                context: context,
+                onPhaseChanged: updatePhase,
+              ),
               Column(children: [...stepperChildren]),
             ],
           ),
@@ -117,8 +125,13 @@ class StepperTitle extends StatelessWidget {
   final CropCard crop;
   final BuildContext context;
   final CropService cropService = CropService();
+  final VoidCallback onPhaseChanged;
 
-  StepperTitle({required this.crop, required this.context});
+  StepperTitle({
+    required this.crop,
+    required this.context,
+    required this.onPhaseChanged,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -130,10 +143,9 @@ class StepperTitle extends StatelessWidget {
           _buildStepperInfo(),
           SizedBox(height: 20),
           _buildStartDateInfo(),
-            if (crop.phase.phaseName != "Formula" && crop.state == true)
-              _buildMoveToPreviousCropPhase(context),
-          if(crop.state == true)
-              _buildMoveToNextPhase(context),
+          if (crop.phase.phaseName != "Formula" && crop.state == true)
+            _buildMoveToPreviousCropPhase(context),
+          if (crop.state == true) _buildMoveToNextPhase(context),
         ],
       ),
     );
@@ -200,15 +212,16 @@ class StepperTitle extends StatelessWidget {
             "Are you sure you want to\nmove to previous crop phase? \n\nAll records from ${crop.phase.phaseName} \nphase will be lost.",
             "Yes, Go Back",
             () async {
-              //TODO: Delete all records from current phase and move to previous phase
-              CropCurrentPhase previousPhase = CropCurrentPhase.values[
-              CropCurrentPhase.values.indexOf(crop.phase) - 1];
+              CropCurrentPhase previousPhase = CropCurrentPhase
+                  .values[CropCurrentPhase.values.indexOf(crop.phase) - 1];
+
               await cropService.updateCropPhase(
                 crop.id,
                 previousPhase.phaseName,
                 true,
               );
-              //chosenCrop.phaseName = previousPhase.phaseName;
+              onPhaseChanged();
+
               Navigator.pushNamed(context, '/records', arguments: {
                 'cropId': crop.id,
                 'cropPhase': previousPhase.phaseName,
@@ -234,6 +247,7 @@ class StepperTitle extends StatelessWidget {
       ),
     );
   }
+
   Widget _buildMoveToNextPhase(BuildContext context) {
     bool isLastPhase = crop.phase == CropCurrentPhase.harvest;
     return Padding(
@@ -251,13 +265,16 @@ class StepperTitle extends StatelessWidget {
               'cropPhase': crop.phase.phaseName,
             });
           } else {
-            CropCurrentPhase nextPhase = CropCurrentPhase.values[
-            CropCurrentPhase.values.indexOf(crop.phase) + 1];
+            CropCurrentPhase nextPhase = CropCurrentPhase
+                .values[CropCurrentPhase.values.indexOf(crop.phase) + 1];
+
             await cropService.updateCropPhase(
               crop.id,
               nextPhase.phaseName,
               true,
             );
+            onPhaseChanged();
+
             Navigator.pushNamed(context, '/records', arguments: {
               'cropId': crop.id,
               'cropPhase': nextPhase.phaseName,
