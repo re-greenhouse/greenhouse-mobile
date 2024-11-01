@@ -3,6 +3,7 @@ import 'package:greenhouse/models/crop_phase.dart';
 import 'package:greenhouse/widgets/create_crop_dialog.dart';
 import 'package:greenhouse/widgets/bottom_navigation_bar.dart';
 import 'package:greenhouse/widgets/crop_card.dart';
+import 'package:greenhouse/services/user_preferences.dart';
 
 import '../../services/crop_service.dart';
 import '../../models/crop.dart';
@@ -18,6 +19,7 @@ class _CropsInProgressState extends State<CropsInProgress> {
   DateTime selectedDate = DateTime.now();
   String searchQuery = '';
   List<CropCard> cropCards = [];
+  String username = '';
 
   final _cropService = CropService();
 
@@ -45,17 +47,21 @@ class _CropsInProgressState extends State<CropsInProgress> {
                 phase: stringToCropCurrentPhase(crop.phase),
                 name: crop.name,
                 state: crop.state,
-                onDelete: (String
-                    id) {}, //its only there as a placeholder it really does nothing as it shouldn't be able to delete from the crops in progress
+                onDelete: (String id) {},
               ))
           .toList();
     });
+  }
+
+  Future<void> _loadUsername() async {
+    username = await UserPreferences.getUsername() ?? '';
   }
 
   @override
   void initState() {
     super.initState();
     initialize();
+    _loadUsername();
   }
 
   String parseDate(String date) {
@@ -74,90 +80,102 @@ class _CropsInProgressState extends State<CropsInProgress> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        appBar: AppBar(),
-        body: ListView(
-          children: <Widget>[
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Text(
-                'Crops in Progress',
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                textAlign: TextAlign.center,
-              ),
+      appBar: AppBar(),
+      body: ListView(
+        children: <Widget>[
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Text(
+              'Crops in Progress',
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              textAlign: TextAlign.center,
             ),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: TextField(
-                      onChanged: (value) {
-                        setState(() {
-                          searchQuery = value;
-                        });
-                      },
-                      decoration: InputDecoration(
-                        hintText: 'Search crops...',
-                        border: OutlineInputBorder(),
-                      ),
+          ),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16.0),
+            child: Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    onChanged: (value) {
+                      setState(() {
+                        searchQuery = value;
+                      });
+                    },
+                    decoration: InputDecoration(
+                      hintText: 'Search crops...',
+                      border: OutlineInputBorder(),
                     ),
                   ),
-                  IconButton(
-                    icon: Icon(Icons.calendar_today),
-                    onPressed: () async {
-                      final DateTime? datetime = await showDatePicker(
-                        context: context,
-                        initialDate: selectedDate,
-                        firstDate: DateTime(2000),
-                        lastDate: DateTime(2050),
-                        builder: (BuildContext context, Widget? child) {
-                          return Theme(
-                            data: ThemeData(
-                              colorScheme: ThemeData().colorScheme.copyWith(
-                                    primary: Color(0xFF465B3F),
-                                  ),
-                            ),
-                            child: child!,
-                          );
-                        },
-                      );
-                      if (datetime != null) {
-                        setState(() {
-                          selectedDate = datetime;
-                          searchQuery =
-                              '${selectedDate.year}-${selectedDate.month.toString().padLeft(2, '0')}-${selectedDate.day.toString().padLeft(2, '0')}';
-                        });
-                      }
-                    },
-                  ),
-                ],
-              ),
+                ),
+                IconButton(
+                  icon: Icon(Icons.calendar_today),
+                  onPressed: () async {
+                    final DateTime? datetime = await showDatePicker(
+                      context: context,
+                      initialDate: selectedDate,
+                      firstDate: DateTime(2000),
+                      lastDate: DateTime(2050),
+                      builder: (BuildContext context, Widget? child) {
+                        return Theme(
+                          data: ThemeData(
+                            colorScheme: ThemeData().colorScheme.copyWith(
+                                  primary: Color(0xFF465B3F),
+                                ),
+                          ),
+                          child: child!,
+                        );
+                      },
+                    );
+                    if (datetime != null) {
+                      setState(() {
+                        selectedDate = datetime;
+                        searchQuery =
+                            '${selectedDate.year}-${selectedDate.month.toString().padLeft(2, '0')}-${selectedDate.day.toString().padLeft(2, '0')}';
+                      });
+                    }
+                  },
+                ),
+              ],
             ),
-            ElevatedButton(onPressed: () async {
-              Crop? newCrop = await showDialog<Crop>(
-                context: context,
-                builder: (BuildContext context) {
-                  return CreateCropDialog();
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              if (username == 'Alan' && cropCards.length >= 5) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                      content: Text(
+                          'Has alcanzado el límite de 5 cultivos, cambia a otro plan para agregar más.')),
+                );
+              } else {
+                Crop? newCrop = await showDialog<Crop>(
+                  context: context,
+                  builder: (BuildContext context) {
+                    return CreateCropDialog();
+                  },
+                );
+                if (newCrop != null) {
+                  setState(() {
+                    cropCards.add(CropCard(
+                      id: newCrop.id,
+                      startDate: parseDate(newCrop.createdDate),
+                      phase: stringToCropCurrentPhase(newCrop.phase),
+                      name: newCrop.name,
+                      state: newCrop.state,
+                      onDelete: (String id) {},
+                    ));
+                  });
                 }
-              );
-              if (newCrop != null) {
-                setState(() {
-                  cropCards.add(CropCard(
-                    id: newCrop.id,
-                    startDate: parseDate(newCrop.createdDate),
-                    phase: stringToCropCurrentPhase(newCrop.phase),
-                    name: newCrop.name,
-                    state: newCrop.state,
-                    onDelete: (String id) {},
-                  ));
-                });
               }
-            }, child: Text('Create New Crop')),
-            ...cropCards.where((cropCard) =>
-                cropCard.startDate.contains(searchQuery) ||
-                cropCard.name.contains(searchQuery)),
-          ],
-        ),
-        bottomNavigationBar: GreenhouseBottomNavigationBar());
+            },
+            child: Text('Create New Crop'),
+          ),
+          ...cropCards.where((cropCard) =>
+              cropCard.startDate.contains(searchQuery) ||
+              cropCard.name.contains(searchQuery)),
+        ],
+      ),
+      bottomNavigationBar: GreenhouseBottomNavigationBar(),
+    );
   }
 }
