@@ -4,6 +4,8 @@ import 'package:greenhouse/models/signin.dart';
 import 'package:greenhouse/services/user_preferences.dart';
 import 'package:http/http.dart' as http;
 
+import 'company_service.dart';
+
 class AuthService {
   final String baseUrl = Config.baseUrl;
 
@@ -33,6 +35,8 @@ class AuthService {
       await UserPreferences.saveProfileId(profileId);
       await UserPreferences.saveUsername(signIn.username);
 
+      //call the company service to add the company id to the user preferences
+      await CompanyService().getCompanyByProfileIdUserPreferences();
       return profileId;
     } else {
       throw Exception('Failed to sign in');

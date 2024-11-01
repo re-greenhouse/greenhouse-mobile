@@ -26,6 +26,26 @@ class CompanyService {
     }
   }
 
+  Future<Company> getCompanyByProfileIdUserPreferences() async {
+    final token = await UserPreferences.getToken();
+    final profileId = await UserPreferences.getProfileId();
+
+    final response = await http.get(
+      Uri.parse('${baseUrl}companies?profileId={$profileId}'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+    );
+    if (response.statusCode == 200) {
+      final company = Company.fromJson(json.decode(response.body));
+      await UserPreferences.saveCompanyId(company.id);
+      return company;
+    } else {
+      throw Exception('Failed to load profile');
+    }
+  }
+
   Future<String> addEmployeeToCompany(String employeeProfileId) async {
     final token = await UserPreferences.getToken();
     final response = await http.post(
