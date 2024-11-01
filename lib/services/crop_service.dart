@@ -41,8 +41,9 @@ class CropService {
 
   Future<List<Crop>> getCropsByState(bool state) async {
     final token = await UserPreferences.getToken();
+    final companyId = await UserPreferences.getCompanyId();
     final response = await http.get(
-      Uri.parse('${baseUrl}crops'),
+      Uri.parse('${baseUrl}crops/company/$companyId'),
       headers: {
         'Content-Type': 'application/json',
         'Authorization': 'Bearer $token',
@@ -68,6 +69,7 @@ class CropService {
   Future<Crop> createCrop(String name) async {
     final token = await UserPreferences.getToken();
     final author = await UserPreferences.getUsername();
+    final companyId = await UserPreferences.getCompanyId();
     final response = await http.post(
       Uri.parse('${baseUrl}crops'),
       headers: {
@@ -77,6 +79,7 @@ class CropService {
       body: jsonEncode({
         'name': name,
         'author': author,
+        'companyId': companyId,
       }),
     );
 
