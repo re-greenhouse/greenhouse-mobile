@@ -6,6 +6,7 @@ import 'package:greenhouse/screens/camera/image_view_screen.dart';
 import 'package:greenhouse/services/crop_service.dart';
 import 'package:greenhouse/widgets/bottom_navigation_bar.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../widgets/crop_card.dart';
 
 class StepperWidget extends StatefulWidget {
@@ -145,6 +146,28 @@ class _StepperTitleState extends State<StepperTitle> {
   final imagePicker = ImagePicker();
 
   @override
+  void initState() {
+    super.initState();
+    _loadImages();
+  }
+
+  Future<void> _loadImages() async {
+    final prefs = await SharedPreferences.getInstance();
+    final imagePaths =
+        prefs.getStringList('saved_image_paths_${widget.crop.id}') ?? [];
+    setState(() {
+      images = imagePaths.map((path) => XFile(path)).toList();
+    });
+  }
+
+  Future<void> _saveImages() async {
+    final prefs = await SharedPreferences.getInstance();
+    final imagePaths = images.map((image) => image!.path).toList();
+    await prefs.setStringList(
+        'saved_image_paths_${widget.crop.id}', imagePaths);
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Padding(
       padding: EdgeInsets.only(top: 20, bottom: 20),
@@ -157,8 +180,11 @@ class _StepperTitleState extends State<StepperTitle> {
           if (widget.crop.phase.phaseName == CropCurrentPhase.harvest.phaseName)
             Column(
               children: [
-                _uploadPictureButton(context),
-                if (images.isNotEmpty) _buildImageGridView(),
+                if (widget.crop.state) ...[
+                  _uploadPictureButton(context),
+                  if (images.isNotEmpty) _buildImageGridView(),
+                ] else
+                  _buildImageGridView(),
               ],
             ),
           if (widget.crop.phase.phaseName != CropCurrentPhase.harvest.phaseName)
@@ -249,6 +275,7 @@ class _StepperTitleState extends State<StepperTitle> {
                       setState(() {
                         images.add(picture);
                       });
+                      await _saveImages();
                       widget.onPhaseChanged();
                     }
                   },
@@ -269,6 +296,7 @@ class _StepperTitleState extends State<StepperTitle> {
                     setState(() {
                       images.add(XFile(picturePath));
                     });
+                    await _saveImages();
                     widget.onPhaseChanged();
                   },
                 ),
