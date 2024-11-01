@@ -4,6 +4,7 @@ import 'package:greenhouse/models/crop_phase.dart';
 import 'package:greenhouse/screens/camera/camera_screen.dart';
 import 'package:greenhouse/screens/camera/image_view_screen.dart';
 import 'package:greenhouse/services/crop_service.dart';
+import 'package:greenhouse/services/ia_service.dart';
 import 'package:greenhouse/widgets/bottom_navigation_bar.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -144,6 +145,8 @@ class StepperTitle extends StatefulWidget {
 class _StepperTitleState extends State<StepperTitle> {
   List<XFile?> images = [];
   final imagePicker = ImagePicker();
+  final IAService iaService = IAService();
+  bool isAnalyzed = false;
 
   @override
   void initState() {
@@ -155,8 +158,10 @@ class _StepperTitleState extends State<StepperTitle> {
     final prefs = await SharedPreferences.getInstance();
     final imagePaths =
         prefs.getStringList('saved_image_paths_${widget.crop.id}') ?? [];
+    List<XFile?> loadedImages = imagePaths.map((path) => XFile(path)).toList();
+
     setState(() {
-      images = imagePaths.map((path) => XFile(path)).toList();
+      images = loadedImages;
     });
   }
 
@@ -206,15 +211,7 @@ class _StepperTitleState extends State<StepperTitle> {
           if (images.isEmpty) {
             await _optionsDialogBox(context);
           } else {
-            await widget.cropService.updateCropPhase(
-              widget.crop.id,
-              widget.crop.phase.phaseName,
-              false,
-            );
-            Navigator.pushNamed(context, '/records', arguments: {
-              'cropId': widget.crop.id,
-              'cropPhase': widget.crop.phase.phaseName,
-            });
+            await _showInferenceDialog(images.last);
           }
         },
         child: Text(
@@ -231,6 +228,79 @@ class _StepperTitleState extends State<StepperTitle> {
     );
   }
 
+  Future<void> _showInferenceDialog(XFile? imageFile) async {
+    if (imageFile == null) return;
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text("Analyzing Crop Quality"),
+          content: FutureBuilder<String>(
+            future: iaService.runInference(File(imageFile.path)),
+            builder: (BuildContext context, AsyncSnapshot<String> snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    CircularProgressIndicator(),
+                    SizedBox(height: 10),
+                    Text("Please wait..."),
+                  ],
+                );
+              } else if (snapshot.hasError) {
+                return Text("Error: ${snapshot.error}");
+              } else {
+                _saveCropQuality(snapshot.data!, imageFile.path);
+                return Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Image.file(File(imageFile.path)),
+                    SizedBox(height: 10),
+                    Text("Quality: ${snapshot.data}"),
+                  ],
+                );
+              }
+            },
+          ),
+          actions: [
+            FutureBuilder<String>(
+              future: iaService.runInference(File(imageFile.path)),
+              builder: (BuildContext context, AsyncSnapshot<String> snapshot) {
+                if (snapshot.connectionState == ConnectionState.done) {
+                  return TextButton(
+                    onPressed: () async {
+                      Navigator.of(context).pop();
+                      await _finalizeCrop();
+                    },
+                    child: Text("Close"),
+                  );
+                } else {
+                  return Container();
+                }
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Future<void> _saveCropQuality(String quality, String imagePath) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('crop_quality_${widget.crop.id}_$imagePath', quality);
+  }
+
+  Future<void> _finalizeCrop() async {
+    await widget.cropService.updateCropPhase(
+      widget.crop.id,
+      widget.crop.phase.phaseName,
+      false,
+    );
+    Navigator.pushReplacementNamed(context, '/crops-archive');
+  }
+
   Widget _buildImageView() {
     return ListView.builder(
       padding: const EdgeInsets.all(10),
@@ -239,59 +309,82 @@ class _StepperTitleState extends State<StepperTitle> {
       itemCount: images.length,
       itemBuilder: (BuildContext context, int index) {
         File imageFile = File(images[index]!.path);
-        return Padding(
-          padding: const EdgeInsets.only(bottom: 10),
-          child: Stack(
-            children: [
-              InkWell(
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(8),
-                  child: Image.file(
-                    imageFile,
-                    fit: BoxFit.cover,
-                    width: double.infinity,
-                    height: 200,
+        return FutureBuilder<String?>(
+          future: _loadCropQuality(images[index]!.path),
+          builder: (context, snapshot) {
+            String qualityText = (!widget.crop.state && snapshot.hasData)
+                ? "Quality: ${snapshot.data}"
+                : "";
+
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 10),
+              child: Stack(
+                children: [
+                  Column(
+                    children: [
+                      InkWell(
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(8),
+                          child: Image.file(
+                            imageFile,
+                            fit: BoxFit.cover,
+                            width: double.infinity,
+                            height: 200,
+                          ),
+                        ),
+                        onTap: () {
+                          Navigator.of(context).push(MaterialPageRoute(
+                            builder: (context) => ImageViewScreen(
+                              imageFile: imageFile,
+                            ),
+                          ));
+                        },
+                      ),
+                      if (qualityText.isNotEmpty)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 8.0),
+                          child: Text(qualityText),
+                        ),
+                    ],
                   ),
-                ),
-                onTap: () {
-                  Navigator.of(context).push(MaterialPageRoute(
-                    builder: (context) => ImageViewScreen(
-                      imageFile: imageFile,
+                  if (widget.crop.state)
+                    Positioned(
+                      top: 8,
+                      right: 8,
+                      child: GestureDetector(
+                        onTap: () async {
+                          setState(() {
+                            images.removeAt(index);
+                          });
+                          await _saveImages();
+                          widget.onPhaseChanged();
+                        },
+                        child: Container(
+                          padding: EdgeInsets.all(4),
+                          decoration: BoxDecoration(
+                            color: Colors.black.withOpacity(0.6),
+                            shape: BoxShape.circle,
+                          ),
+                          child: Icon(
+                            Icons.delete,
+                            color: Colors.white,
+                            size: 20,
+                          ),
+                        ),
+                      ),
                     ),
-                  ));
-                },
+                ],
               ),
-              if (widget.crop.state)
-                Positioned(
-                  top: 8,
-                  right: 8,
-                  child: GestureDetector(
-                    onTap: () async {
-                      setState(() {
-                        images.removeAt(index);
-                      });
-                      await _saveImages();
-                      widget.onPhaseChanged();
-                    },
-                    child: Container(
-                      padding: EdgeInsets.all(4),
-                      decoration: BoxDecoration(
-                        color: Colors.black.withOpacity(0.6),
-                        shape: BoxShape.circle,
-                      ),
-                      child: Icon(
-                        Icons.delete,
-                        color: Colors.white,
-                        size: 20,
-                      ),
-                    ),
-                  ),
-                ),
-            ],
-          ),
+            );
+          },
         );
       },
     );
+  }
+
+  Future<String?> _loadCropQuality(String imagePath) async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString('crop_quality_${widget.crop.id}_$imagePath');
   }
 
   Future<void> _optionsDialogBox(BuildContext context) {
