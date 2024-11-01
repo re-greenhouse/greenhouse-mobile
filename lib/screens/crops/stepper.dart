@@ -182,9 +182,9 @@ class _StepperTitleState extends State<StepperTitle> {
               children: [
                 if (widget.crop.state) ...[
                   _uploadPictureButton(context),
-                  if (images.isNotEmpty) _buildImageGridView(),
+                  if (images.isNotEmpty) _buildImageView(),
                 ] else
-                  _buildImageGridView(),
+                  _buildImageView(),
               ],
             ),
           if (widget.crop.phase.phaseName != CropCurrentPhase.harvest.phaseName)
@@ -231,27 +231,64 @@ class _StepperTitleState extends State<StepperTitle> {
     );
   }
 
-  Widget _buildImageGridView() {
-    return GridView.builder(
+  Widget _buildImageView() {
+    return ListView.builder(
       padding: const EdgeInsets.all(10),
       shrinkWrap: true,
       physics: NeverScrollableScrollPhysics(),
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 2,
-        mainAxisSpacing: 10,
-        crossAxisSpacing: 10,
-      ),
       itemCount: images.length,
       itemBuilder: (BuildContext context, int index) {
         File imageFile = File(images[index]!.path);
-        return InkWell(
-          child: Image.file(imageFile),
-          onTap: () {
-            Navigator.of(context).push(MaterialPageRoute(
-                builder: (context) => ImageViewScreen(
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 10),
+          child: Stack(
+            children: [
+              InkWell(
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(8),
+                  child: Image.file(
+                    imageFile,
+                    fit: BoxFit.cover,
+                    width: double.infinity,
+                    height: 200,
+                  ),
+                ),
+                onTap: () {
+                  Navigator.of(context).push(MaterialPageRoute(
+                    builder: (context) => ImageViewScreen(
                       imageFile: imageFile,
-                    )));
-          },
+                    ),
+                  ));
+                },
+              ),
+              if (widget.crop.state)
+                Positioned(
+                  top: 8,
+                  right: 8,
+                  child: GestureDetector(
+                    onTap: () async {
+                      setState(() {
+                        images.removeAt(index);
+                      });
+                      await _saveImages();
+                      widget.onPhaseChanged();
+                    },
+                    child: Container(
+                      padding: EdgeInsets.all(4),
+                      decoration: BoxDecoration(
+                        color: Colors.black.withOpacity(0.6),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(
+                        Icons.delete,
+                        color: Colors.white,
+                        size: 20,
+                      ),
+                    ),
+                  ),
+                ),
+            ],
+          ),
         );
       },
     );
@@ -279,13 +316,25 @@ class _StepperTitleState extends State<StepperTitle> {
                       widget.onPhaseChanged();
                     }
                   },
-                  child: const Text('image_picker: Galería'),
+                  child: Row(
+                    children: [
+                      Icon(Icons.photo_library, color: Color(0xFF7DA257)),
+                      SizedBox(width: 8),
+                      Text('Upload a picture from gallery'),
+                    ],
+                  ),
                 ),
                 const Padding(
                   padding: EdgeInsets.all(8.0),
                 ),
                 GestureDetector(
-                  child: const Text('camera: cámara'),
+                  child: Row(
+                    children: [
+                      Icon(Icons.camera_alt, color: Color(0xFF7DA257)),
+                      SizedBox(width: 8),
+                      Text('Take a picture'),
+                    ],
+                  ),
                   onTap: () async {
                     String picturePath = await Navigator.of(context).push(
                       MaterialPageRoute(
