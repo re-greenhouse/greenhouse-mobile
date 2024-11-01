@@ -56,7 +56,9 @@ class MyApp extends StatelessWidget {
             builder = (BuildContext _) => RecordsScreen(
                 cropId: (settings.arguments as Map<String, String>)['cropId']!,
                 cropPhase:
-                    (settings.arguments as Map<String, String>)['cropPhase']!);
+                    (settings.arguments as Map<String, String>)['cropPhase']!,
+                cropName:
+                    (settings.arguments as Map<String, String>)['cropName']!);
             break;
           case '/user-profile':
             builder = (BuildContext _) => UserProfileScreen();

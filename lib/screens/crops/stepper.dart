@@ -61,6 +61,7 @@ class _StepperWidgetState extends State<StepperWidget> {
                 'cropId': chosenCrop?.id ?? '',
                 'cropPhase': item.phaseName,
                 'state': (chosenCrop?.state ?? '').toString(),
+                'cropName': chosenCrop?.name ?? '',
               });
             },
           ),
@@ -74,6 +75,7 @@ class _StepperWidgetState extends State<StepperWidget> {
               Navigator.pushNamed(context, '/records', arguments: {
                 'cropId': chosenCrop?.id ?? '',
                 'cropPhase': item.phaseName,
+                'cropName': chosenCrop?.name ?? '',
               });
             },
           ),
@@ -86,6 +88,7 @@ class _StepperWidgetState extends State<StepperWidget> {
               Navigator.pushNamed(context, '/records', arguments: {
                 'cropId': chosenCrop?.id ?? '',
                 'cropPhase': item.phaseName,
+                'cropName': chosenCrop?.name ?? '',
               });
             },
           ),
@@ -192,12 +195,12 @@ class _StepperTitleState extends State<StepperTitle> {
                   _buildImageView(),
               ],
             ),
-          if (widget.crop.phase.phaseName != CropCurrentPhase.harvest.phaseName)
-            _buildMoveToNextPhase(context),
           if (widget.crop.phase.phaseName !=
-                  CropCurrentPhase.formula.phaseName &&
+              CropCurrentPhase.formula.phaseName &&
               widget.crop.state == true)
             _buildMoveToPreviousCropPhase(context),
+          if (widget.crop.phase.phaseName != CropCurrentPhase.harvest.phaseName)
+            _buildMoveToNextPhase(context),
         ],
       ),
     );
@@ -518,6 +521,7 @@ class _StepperTitleState extends State<StepperTitle> {
           Navigator.pushNamed(context, '/records', arguments: {
             'cropId': widget.crop.id,
             'cropPhase': previousPhase.phaseName,
+            'cropName': widget.crop.name,
           });
         },
         child: Text(
@@ -549,6 +553,7 @@ class _StepperTitleState extends State<StepperTitle> {
           Navigator.pushNamed(context, '/records', arguments: {
             'cropId': widget.crop.id,
             'cropPhase': nextPhase.phaseName,
+            'cropName': widget.crop.name,
           });
         },
         child: Text(
