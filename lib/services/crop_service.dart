@@ -1,7 +1,5 @@
 import 'dart:convert';
-import 'dart:ffi';
 import 'package:greenhouse/config.dart';
-import 'package:greenhouse/models/user.dart';
 import 'package:greenhouse/services/user_preferences.dart';
 import 'package:http/http.dart' as http;
 
@@ -43,17 +41,17 @@ class CropService {
 
   Future<List<Crop>> getCropsByState(bool state) async {
     final token = await UserPreferences.getToken();
+    final companyId = await UserPreferences.getCompanyId();
     final response = await http.get(
-      Uri.parse('${baseUrl}crops'),
+      Uri.parse('${baseUrl}crops/company/$companyId'),
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': 'Bearer $token', // Use token for authentication
+        'Authorization': 'Bearer $token',
       },
     );
     if (response.statusCode == 200) {
       Map<String, dynamic> body = json.decode(response.body);
-      List<dynamic>? crops = body[
-          'crops']; // Adjust this line based on the actual structure of your JSON response
+      List<dynamic>? crops = body['crops'];
       if (crops != null) {
         List<Crop> cropObjects =
             crops.map((dynamic item) => Crop.fromJson(item)).toList();
@@ -61,7 +59,7 @@ class CropService {
             cropObjects.where((Crop crop) => crop.state == state).toList();
         return filteredCrops;
       } else {
-        return []; // Return an empty list when 'crops' is null
+        return [];
       }
     } else {
       throw Exception('Failed to load crops');
@@ -71,6 +69,7 @@ class CropService {
   Future<Crop> createCrop(String name) async {
     final token = await UserPreferences.getToken();
     final author = await UserPreferences.getUsername();
+    final companyId = await UserPreferences.getCompanyId();
     final response = await http.post(
       Uri.parse('${baseUrl}crops'),
       headers: {
@@ -80,6 +79,7 @@ class CropService {
       body: jsonEncode({
         'name': name,
         'author': author,
+        'companyId': companyId,
       }),
     );
 
@@ -90,7 +90,7 @@ class CropService {
     }
   }
 
-Future<void> updateCropPhase(String cropId, String phase, bool state) async {
+  Future<void> updateCropPhase(String cropId, String phase, bool state) async {
     final token = await UserPreferences.getToken();
     if (phase == 'Formula') {
       phase = 'formula';

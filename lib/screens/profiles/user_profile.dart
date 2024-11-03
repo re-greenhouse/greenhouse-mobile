@@ -109,21 +109,6 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                       ),
                     ),
                     SizedBox(height: 20),
-                    InkWell(
-                      onTap: () {
-                        deleteDialog(
-                          context,
-                          "Are you sure you want to \ndelete your account?",
-                          "Yes, Delete",
-                          () {},
-                        );
-                      },
-                      child: Text(
-                        'Delete account',
-                        style: TextStyle(fontSize: 16, color: Colors.red),
-                      ),
-                    ),
-                    SizedBox(height: 20),
                     NavigationButton(
                         buttonText: "Log out", route: '/login', outline: true)
                   ],
