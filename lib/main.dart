@@ -1,3 +1,4 @@
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:greenhouse/models/crop.dart';
 import 'package:greenhouse/screens/crops/crops_archive.dart';
@@ -13,7 +14,15 @@ import 'package:greenhouse/screens/profiles/company_profile.dart';
 import 'package:greenhouse/screens/profiles/user_profile.dart';
 import 'package:greenhouse/widgets/crop_card.dart';
 
-void main() {
+import 'firebase_options.dart';
+
+void main() async{
+
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
+
   runApp(const MyApp());
 }
 

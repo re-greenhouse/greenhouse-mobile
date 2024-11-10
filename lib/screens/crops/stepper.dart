@@ -5,6 +5,7 @@ import 'package:greenhouse/screens/camera/camera_screen.dart';
 import 'package:greenhouse/screens/camera/image_view_screen.dart';
 import 'package:greenhouse/services/crop_service.dart';
 import 'package:greenhouse/services/ia_service.dart';
+import 'package:greenhouse/services/upload_image_service.dart';
 import 'package:greenhouse/widgets/bottom_navigation_bar.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -233,6 +234,7 @@ class _StepperTitleState extends State<StepperTitle> {
 
   Future<void> _showInferenceDialog(XFile? imageFile) async {
     if (imageFile == null) return;
+    await uploadImage(File(imageFile.path));
 
     showDialog(
       context: context,
