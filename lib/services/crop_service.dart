@@ -125,4 +125,23 @@ class CropService {
       throw Exception('Failed to update crop phase');
     }
   }
+
+  Future<void> updateImageAndQuality(String cropId, String quality, String imageUrl) async {
+    final token = await UserPreferences.getToken();
+    final response = await http.patch(
+      Uri.parse('${baseUrl}crops/image/$cropId'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+      body: jsonEncode({
+        'imageUrl': imageUrl,
+        'quality': quality,
+      }),
+    );
+
+    if (response.statusCode != 200) {
+      throw Exception('Failed to update image quality');
+    }
+  }
 }

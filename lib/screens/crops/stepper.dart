@@ -150,6 +150,7 @@ class _StepperTitleState extends State<StepperTitle> {
   List<XFile?> images = [];
   final imagePicker = ImagePicker();
   final IAService iaService = IAService();
+  final CropService cropService = CropService();
   bool isAnalyzed = false;
 
   @override
@@ -234,7 +235,7 @@ class _StepperTitleState extends State<StepperTitle> {
 
   Future<void> _showInferenceDialog(XFile? imageFile) async {
     if (imageFile == null) return;
-    await uploadImage(File(imageFile.path));
+    final url = await uploadImage(File(imageFile.path));
 
     showDialog(
       context: context,
@@ -258,6 +259,7 @@ class _StepperTitleState extends State<StepperTitle> {
                 return Text("Error: ${snapshot.error}");
               } else {
                 _saveCropQuality(snapshot.data!, imageFile.path);
+                widget.cropService.updateImageAndQuality(widget.crop.id, snapshot.data!, url);
                 return Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
