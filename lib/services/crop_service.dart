@@ -4,6 +4,7 @@ import 'package:greenhouse/services/user_preferences.dart';
 import 'package:http/http.dart' as http;
 
 import '../models/crop.dart';
+import 'message_service.dart';
 
 class CropService {
   final String baseUrl = Config.baseUrl;
@@ -68,6 +69,10 @@ class CropService {
 
   Future<Crop> createCrop(String name) async {
     final token = await UserPreferences.getToken();
+    final user = await UserPreferences.getUsername();
+    MessageService messageService = MessageService();
+    final company = await UserPreferences.getCompanyId();
+    final String message = "Cultivo $name creado por $user";
     final author = await UserPreferences.getUsername();
     final companyId = await UserPreferences.getCompanyId();
     final response = await http.post(
@@ -84,6 +89,7 @@ class CropService {
     );
 
     if (response.statusCode == 201) {
+      messageService.sendMessage(company!, message);
       return Crop.fromJson(json.decode(response.body));
     } else {
       throw Exception('Failed to create crop');
@@ -126,8 +132,12 @@ class CropService {
     }
   }
 
-  Future<void> updateImageAndQuality(String cropId, String quality, String imageUrl) async {
+  Future<void> updateImageAndQuality(String cropId, String quality, String imageUrl, String cropName) async {
     final token = await UserPreferences.getToken();
+    // Create an instance of MessageService
+    MessageService messageService = MessageService();
+    final company = await UserPreferences.getCompanyId();
+    final String message = "Cultivo $cropName - terminado con calidad $quality";
     final response = await http.patch(
       Uri.parse('${baseUrl}crops/image/$cropId'),
       headers: {
@@ -140,7 +150,11 @@ class CropService {
       }),
     );
 
-    if (response.statusCode != 200) {
+
+    if (response.statusCode == 200) {
+      // Send the message
+      messageService.sendMessage(company!, message);
+    } else {
       throw Exception('Failed to update image quality');
     }
   }
