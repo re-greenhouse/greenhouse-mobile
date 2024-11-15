@@ -5,6 +5,7 @@ import 'package:greenhouse/widgets/crop_card.dart';
 import '../../models/crop_phase.dart';
 import '../../services/crop_service.dart';
 
+
 class CropsArchive extends StatefulWidget {
   const CropsArchive({super.key});
 
@@ -40,10 +41,8 @@ class _CropsArchiveState extends State<CropsArchive> {
                 phase: stringToCropCurrentPhase(crop.phase),
                 name: crop.name,
                 state: crop.state,
-                onDelete: (String id) {
-                  setState(() {
-                    cropCards.removeWhere((card) => card.id == id);
-                  });
+                onDelete: () {
+                  deleteCrop(crop.id);
                 },
               ))
           .toList();

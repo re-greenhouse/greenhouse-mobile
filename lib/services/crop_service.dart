@@ -67,6 +67,20 @@ class CropService {
     }
   }
 
+  Future<void> deleteCrop(String id) async {
+    final token = await UserPreferences.getToken();
+    final response = await http.delete(
+      Uri.parse('${baseUrl}crops/$id'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+    );
+    if (response.statusCode != 200) {
+      throw Exception('Failed to delete crop');
+    }
+  }
+
   Future<Crop> createCrop(String name) async {
     final token = await UserPreferences.getToken();
     final user = await UserPreferences.getUsername();
@@ -89,7 +103,7 @@ class CropService {
     );
 
     if (response.statusCode == 201) {
-      messageService.sendMessage(company!, message);
+      messageService.sendMessage(company!, message, 'created', Crop.fromJson(json.decode(response.body)).id, 'formula');
       return Crop.fromJson(json.decode(response.body));
     } else {
       throw Exception('Failed to create crop');
@@ -134,10 +148,11 @@ class CropService {
 
   Future<void> updateImageAndQuality(String cropId, String quality, String imageUrl, String cropName) async {
     final token = await UserPreferences.getToken();
+    final user = await UserPreferences.getUsername();
     // Create an instance of MessageService
     MessageService messageService = MessageService();
     final company = await UserPreferences.getCompanyId();
-    final String message = "Cultivo $cropName - terminado con calidad $quality";
+    final String message = "Cultivo $cropName - terminado por $user con calidad $quality";
     final response = await http.patch(
       Uri.parse('${baseUrl}crops/image/$cropId'),
       headers: {
@@ -153,7 +168,7 @@ class CropService {
 
     if (response.statusCode == 200) {
       // Send the message
-      messageService.sendMessage(company!, message);
+      messageService.sendMessage(company!, message, 'ended', cropId, 'harvest');
     } else {
       throw Exception('Failed to update image quality');
     }

@@ -1,5 +1,7 @@
 import 'dart:async';
+import 'dart:convert';
 import 'package:greenhouse/config.dart';
+import 'package:greenhouse/services/user_preferences.dart';
 import 'package:stomp_dart_client/stomp_dart_client.dart';
 
 class MessageService {
@@ -35,17 +37,28 @@ class MessageService {
     print('Connected to STOMP server');
   }
 
-  Future<void> sendMessage(String company, String message) async {
+  Future<void> sendMessage(String company, String message, String action, String cropId, String phase) async {
     initializeStompClient();
+    final profileId = await UserPreferences.getProfileId();
     final topic = '/topic/$company';
 
     // Wait for the connection to be established
     await _connectionCompleter.future;
-
+    phase = phase.toLowerCase();
+    if (phase == 'preparation area') {
+      phase = 'preparation_area';
+    }
     if (isConnected) {
+      final body = jsonEncode({
+        'message': message,
+        'action': action,
+        'profileId': profileId,
+        'cropId': cropId,
+        'phase': phase,
+      });
       stompClient.send(
         destination: topic,
-        body: message,
+        body: body,
       );
       print('Message sent to $topic: $message');
     } else {

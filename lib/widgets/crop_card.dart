@@ -3,13 +3,17 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:greenhouse/models/crop_phase.dart';
 import 'package:greenhouse/widgets/delete_dialog.dart';
 
+import '../services/crop_service.dart';
+import '../services/message_service.dart';
+import '../services/user_preferences.dart';
+
 class CropCard extends StatefulWidget {
   final String startDate;
   final CropCurrentPhase phase;
   final String id;
   final String name;
   final bool state;
-  final Function(String) onDelete;
+  final VoidCallback onDelete;
 
   const CropCard(
       {super.key,
@@ -25,6 +29,8 @@ class CropCard extends StatefulWidget {
 }
 
 class _CropCardState extends State<CropCard> {
+  final CropService cropService = CropService();
+  final MessageService messageService = MessageService();
   @override
   Widget build(BuildContext context) {
     return SingleChildScrollView(
@@ -91,7 +97,16 @@ class _CropCardState extends State<CropCard> {
                                         context,
                                         "Are you sure you want to \ndelete crop ${widget.id}?",
                                         "Yes, Delete",
-                                        () => widget.onDelete(widget.id));
+                                        () async {
+                                          await cropService.deleteCrop(widget.id);
+                                          final company = await UserPreferences.getCompanyId();
+                                          final String message = "Cultivo ${widget.name} - eliminado por ${await UserPreferences.getUsername()}";
+                                          const String action = 'deleted';
+                                          final String cropId = widget.id;
+                                          final String phase = widget.phase.phaseName;
+                                          messageService.sendMessage(company!, message, action, cropId, phase);
+                                          widget.onDelete();
+                                  });
                                   },
                                   child: Row(
                                     children: [
