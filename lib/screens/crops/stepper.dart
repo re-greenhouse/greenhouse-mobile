@@ -526,7 +526,7 @@ class _StepperTitleState extends State<StepperTitle> {
 
         final company = await UserPreferences.getCompanyId();
         final user = await UserPreferences.getUsername();
-        final String message = "$user retrocedió el cultivo  ${widget.crop.name} a la fase ${previousPhase.phaseName}";
+        final String message = "$user retrocedio el cultivo  ${widget.crop.name} a la fase ${previousPhase.phaseName}";
 
         // Create an instance of MessageService
         MessageService messageService = MessageService();
@@ -567,7 +567,7 @@ class _StepperTitleState extends State<StepperTitle> {
 
           final company = await UserPreferences.getCompanyId();
           final user = await UserPreferences.getUsername();
-          final String message = "$user avanzó el cultivo ${widget.crop.name} a la fase ${nextPhase.phaseName}";
+          final String message = "$user avanzo el cultivo ${widget.crop.name} a la fase ${nextPhase.phaseName}";
 
           // Create an instance of MessageService
           MessageService messageService = MessageService();

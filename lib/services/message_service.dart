@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'package:greenhouse/config.dart';
+import 'package:greenhouse/models/record.dart';
 import 'package:greenhouse/services/user_preferences.dart';
 import 'package:stomp_dart_client/stomp_dart_client.dart';
 
@@ -37,7 +38,7 @@ class MessageService {
     print('Connected to STOMP server');
   }
 
-  Future<void> sendMessage(String company, String message, String action, String cropId, String phase) async {
+  Future<void> sendMessage(String company, String message, String action, String cropId, String phase, {String? recordId, Payload? payload}) async {
     initializeStompClient();
     final profileId = await UserPreferences.getProfileId();
     final topic = '/topic/$company';
@@ -55,6 +56,8 @@ class MessageService {
         'profileId': profileId,
         'cropId': cropId,
         'phase': phase,
+        'recordId': recordId ?? '',
+        'payload': payload ?? {},
       });
       stompClient.send(
         destination: topic,
@@ -65,6 +68,40 @@ class MessageService {
       print('STOMP client is not connected. Message not sent.');
     }
   }
+
+  /*Future<void> sendUpdateRecordMessage(String company, String cropId, String phase, String recordId, Payload payload) async {
+    initializeStompClient();
+    final profileId = await UserPreferences.getProfileId();
+    final user = await UserPreferences.getUsername();
+    final topic = '/topic/$company/update';
+    const action = 'edit';
+    final message = "$user esta solicitando corregir un registro";
+
+    // Wait for the connection to be established
+    await _connectionCompleter.future;
+    phase = phase.toLowerCase();
+    if (phase == 'preparation area') {
+      phase = 'preparation_area';
+    }
+    if (isConnected) {
+      final body = jsonEncode({
+        'message': message,
+        'action': action,
+        'profileId': profileId,
+        'cropId': cropId,
+        'phase': phase,
+        'recordId': recordId,
+        'payload': payload,
+      });
+      stompClient.send(
+        destination: topic,
+        body: body,
+      );
+      print('Message sent to $topic: $message');
+    } else {
+      print('STOMP client is not connected. Message not sent.');
+    }
+  }*/
 
   void disconnectClient() {
     stompClient.deactivate();
