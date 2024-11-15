@@ -73,6 +73,20 @@ class RecordService {
     }
   }
 
+  Future<void> deleteRecord(String id) async {
+    final token = await UserPreferences.getToken();
+    final response = await http.delete(
+      Uri.parse('${baseUrl}records/$id'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+    );
+    if (response.statusCode != 200) {
+      throw Exception('Failed to delete record');
+    }
+  }
+
   Future<Record> createRecord(String phase, String cropId, Payload payload) async {
   final token = await UserPreferences.getToken();
   final author = await UserPreferences.getUsername();

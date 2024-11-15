@@ -25,6 +25,12 @@ class _RecordsScreenState extends State<RecordsScreen> {
   final CropService cropService = CropService();
   bool state = false;
 
+  void removeRecord(String recordId) {
+    setState(() {
+      records.removeWhere((record) => record.id == recordId);
+    });
+  }
+
   @override
   void initState() {
     getCropState();
@@ -146,7 +152,9 @@ class _RecordsScreenState extends State<RecordsScreen> {
               .where((record) =>
                   record.id.contains(searchQuery) ||
                   record.createdDate.contains(searchQuery))
-              .map((record) => RecordCard(record: record)),
+              .map((record) => RecordCard(
+              record: record,
+              onDelete: () => removeRecord(record.id))),
         ],
       ),
       bottomNavigationBar: GreenhouseBottomNavigationBar(),

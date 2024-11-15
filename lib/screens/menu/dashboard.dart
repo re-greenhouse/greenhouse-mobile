@@ -25,11 +25,16 @@ class _DashboardState extends State<Dashboard> {
   Future<void> loadRecords() async {
     try {
       records = await recordService.getRecords();
-      print("Records loaded: $records");
       setState(() {});
     } catch (e) {
       print('Failed to load records: $e');
     }
+  }
+
+  void removeRecord(String recordId) {
+    setState(() {
+      records.removeWhere((record) => record.id == recordId);
+    });
   }
 
   @override
@@ -90,7 +95,10 @@ class _DashboardState extends State<Dashboard> {
                 'Recent records',
                 style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
               ),
-              ...records.map((record) => RecordCard(record: record)),
+              ...records.map((record) => RecordCard(
+                record: record,
+                onDelete: () => removeRecord(record.id),
+              )),
             ],
           ),
         ),

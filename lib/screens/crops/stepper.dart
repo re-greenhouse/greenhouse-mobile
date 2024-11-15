@@ -525,11 +525,12 @@ class _StepperTitleState extends State<StepperTitle> {
         );
 
         final company = await UserPreferences.getCompanyId();
-        final String message = "El cultivo ${widget.crop.name} retrocedió a la fase ${previousPhase.phaseName}";
+        final user = await UserPreferences.getUsername();
+        final String message = "$user retrocedió el cultivo  ${widget.crop.name} a la fase ${previousPhase.phaseName}";
 
         // Create an instance of MessageService
         MessageService messageService = MessageService();
-        await messageService.sendMessage(company!, message);
+        await messageService.sendMessage(company!, message, 'previous', widget.crop.id, previousPhase.phaseName);
 
         widget.onPhaseChanged();
         Navigator.pushNamed(context, '/records', arguments: {
@@ -565,11 +566,12 @@ class _StepperTitleState extends State<StepperTitle> {
           );
 
           final company = await UserPreferences.getCompanyId();
-          final String message = "El cultivo ${widget.crop.name} avanzó a la fase ${nextPhase.phaseName}";
+          final user = await UserPreferences.getUsername();
+          final String message = "$user avanzó el cultivo ${widget.crop.name} a la fase ${nextPhase.phaseName}";
 
           // Create an instance of MessageService
           MessageService messageService = MessageService();
-          await messageService.sendMessage(company!, message);
+          await messageService.sendMessage(company!, message, 'next', widget.crop.id, nextPhase.phaseName);
 
           widget.onPhaseChanged();
           Navigator.pushNamed(context, '/records', arguments: {

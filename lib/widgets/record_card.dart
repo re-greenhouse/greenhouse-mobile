@@ -2,12 +2,17 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:greenhouse/models/record.dart';
 import 'package:greenhouse/screens/crops/edit_record.dart';
+import 'package:greenhouse/services/message_service.dart';
 import 'package:greenhouse/widgets/delete_dialog.dart';
+
+import '../services/record_service.dart';
+import '../services/user_preferences.dart';
 
 class RecordCard extends StatefulWidget {
   final Record record;
+  final VoidCallback onDelete;
 
-  const RecordCard({super.key, required this.record});
+  const RecordCard({super.key, required this.record, required this.onDelete});
 
   @override
   State<RecordCard> createState() => _RecordCardState();
@@ -15,6 +20,8 @@ class RecordCard extends StatefulWidget {
 
 class _RecordCardState extends State<RecordCard> {
   bool _showDetails = false;
+  final RecordService recordService = RecordService();
+  MessageService messageService = MessageService();
 
   @override
   Widget build(BuildContext context) {
@@ -50,7 +57,17 @@ class _RecordCardState extends State<RecordCard> {
                         context,
                         "Are you sure you want to \ndelete record ${widget.record.id}?",
                         "Yes, Delete",
-                        () => {},
+                        () async {
+                          final company = await UserPreferences.getCompanyId();
+                          final String message = "Registro ${widget.record.id} - eliminado por ${await UserPreferences.getUsername()}";
+                          const String action = 'deleted';
+                          final String cropId = widget.record.cropId;
+                          final String phase = widget.record.phase;
+                          await recordService.deleteRecord(widget.record.id);
+                          widget.onDelete();
+                          await messageService.sendMessage(
+                              company!, message, action, cropId, phase);
+                        },
                       );
                     },
                     padding: EdgeInsets.all(0.0)),
