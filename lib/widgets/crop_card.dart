@@ -87,7 +87,7 @@ class _CropCardState extends State<CropCard> {
                               ),
                             ],
                           ),
-                          if (widget.phase == CropCurrentPhase.harvest)
+                          //if (widget.phase == CropCurrentPhase.harvest)
                             Row(
                               mainAxisAlignment: MainAxisAlignment.end,
                               children: [

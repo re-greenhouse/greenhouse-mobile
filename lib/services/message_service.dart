@@ -38,7 +38,7 @@ class MessageService {
     print('Connected to STOMP server');
   }
 
-  Future<void> sendMessage(String company, String message, String action, String cropId, String phase, {String? recordId, Payload? payload}) async {
+  Future<void> sendMessage(String company, String message, String action, String cropId, String phase, {String? recordId, Payload? payload, List<Map<String, dynamic>>? differences}) async {
     initializeStompClient();
     final profileId = await UserPreferences.getProfileId();
     final topic = '/topic/$company';
@@ -58,6 +58,7 @@ class MessageService {
         'phase': phase,
         'recordId': recordId ?? '',
         'payload': payload ?? {},
+        'differences': differences ?? [],
       });
       stompClient.send(
         destination: topic,

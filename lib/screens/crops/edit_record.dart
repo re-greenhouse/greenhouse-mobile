@@ -63,7 +63,8 @@ class _EditRecordScreenState extends State<EditRecordScreen> {
     final phase = widget.record.phase;
     final recordId = widget.record.id;
     final message = "$user esta solicitando corregir un registro";
-    await messageService.sendMessage(company as String, message, 'edited', cropId, phase, recordId: recordId, payload: Payload(data: updatedPayloadData));
+    Payload payload = Payload(data: updatedPayloadData);
+    await messageService.sendMessage(company as String, message, 'edited', cropId, phase, recordId: recordId, payload: payload, differences: payload.getDifferences(widget.record.payload));
 
     widget.updateRecord(updatedRecord);
     Navigator.pop(context, updatedRecord);

@@ -32,7 +32,29 @@ class Payload {
   Map<String, dynamic> toJson() => {
     'data': data.map((item) => item.toJson()).toList(),
   };
+
+  List<Map<String, dynamic>> getDifferences(Payload other) {
+    List<Map<String, dynamic>> differences = [];
+
+    for (var data1 in data) {
+      var data2 = other.data.firstWhere(
+        (element) => element.name == data1.name,
+        orElse: () => PayloadData(name: data1.name, value: ''),
+      );
+
+      if (data1.value != data2.value) {
+        differences.add({
+          'name': data1.name,
+          'before': data1.value,
+          'after': data2.value,
+        });
+      }
+    }
+    print(differences);
+    return differences;
+  }
 }
+
 
 class Record {
   String id;
