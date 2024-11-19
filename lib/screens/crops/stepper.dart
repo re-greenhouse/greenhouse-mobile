@@ -9,6 +9,8 @@ import 'package:greenhouse/services/upload_image_service.dart';
 import 'package:greenhouse/widgets/bottom_navigation_bar.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../../services/message_service.dart';
+import '../../services/user_preferences.dart';
 import '../../widgets/crop_card.dart';
 
 class StepperWidget extends StatefulWidget {
@@ -259,7 +261,7 @@ class _StepperTitleState extends State<StepperTitle> {
                 return Text("Error: ${snapshot.error}");
               } else {
                 _saveCropQuality(snapshot.data!, imageFile.path);
-                widget.cropService.updateImageAndQuality(widget.crop.id, snapshot.data!, url);
+                widget.cropService.updateImageAndQuality(widget.crop.id, snapshot.data!, url, widget.crop.name);
                 return Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
@@ -509,36 +511,45 @@ class _StepperTitleState extends State<StepperTitle> {
   }
 
   Widget _buildMoveToPreviousCropPhase(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(top: 20, bottom: 20),
-      child: OutlinedButton(
-        onPressed: () async {
-          CropCurrentPhase previousPhase = CropCurrentPhase
-              .values[CropCurrentPhase.values.indexOf(widget.crop.phase) - 1];
+  return Padding(
+    padding: const EdgeInsets.only(top: 20, bottom: 20),
+    child: OutlinedButton(
+      onPressed: () async {
+        CropCurrentPhase previousPhase = CropCurrentPhase
+            .values[CropCurrentPhase.values.indexOf(widget.crop.phase) - 1];
 
-          await widget.cropService.updateCropPhase(
-            widget.crop.id,
-            previousPhase.phaseName,
-            true,
-          );
-          widget.onPhaseChanged();
-          Navigator.pushNamed(context, '/records', arguments: {
-            'cropId': widget.crop.id,
-            'cropPhase': previousPhase.phaseName,
-            'cropName': widget.crop.name,
-          });
-        },
-        child: Text(
-          "Move to previous phase",
-          style: TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.bold,
-            color: Color(0xFFB07D50),
-          ),
+        await widget.cropService.updateCropPhase(
+          widget.crop.id,
+          previousPhase.phaseName,
+          true,
+        );
+
+        final company = await UserPreferences.getCompanyId();
+        final user = await UserPreferences.getUsername();
+        final String message = "$user retrocedio el cultivo  ${widget.crop.name} a la fase ${previousPhase.phaseName}";
+
+        // Create an instance of MessageService
+        MessageService messageService = MessageService();
+        await messageService.sendMessage(company!, message, 'previous', widget.crop.id, previousPhase.phaseName);
+
+        widget.onPhaseChanged();
+        Navigator.pushNamed(context, '/records', arguments: {
+          'cropId': widget.crop.id,
+          'cropPhase': previousPhase.phaseName,
+          'cropName': widget.crop.name,
+        });
+      },
+      child: Text(
+        "Move to previous phase",
+        style: TextStyle(
+          fontSize: 16,
+          fontWeight: FontWeight.bold,
+          color: Color(0xFFB07D50),
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 
   Widget _buildMoveToNextPhase(BuildContext context) {
     return Padding(
@@ -553,6 +564,15 @@ class _StepperTitleState extends State<StepperTitle> {
             nextPhase.phaseName,
             true,
           );
+
+          final company = await UserPreferences.getCompanyId();
+          final user = await UserPreferences.getUsername();
+          final String message = "$user avanzo el cultivo ${widget.crop.name} a la fase ${nextPhase.phaseName}";
+
+          // Create an instance of MessageService
+          MessageService messageService = MessageService();
+          await messageService.sendMessage(company!, message, 'next', widget.crop.id, nextPhase.phaseName);
+
           widget.onPhaseChanged();
           Navigator.pushNamed(context, '/records', arguments: {
             'cropId': widget.crop.id,

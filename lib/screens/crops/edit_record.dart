@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:greenhouse/services/message_service.dart';
 import 'package:greenhouse/widgets/bottom_navigation_bar.dart';
 import 'package:greenhouse/widgets/editing_text_form.dart';
 import 'package:greenhouse/models/record.dart';
 import 'package:greenhouse/widgets/message_response.dart';
+
+import '../../services/user_preferences.dart';
 
 class EditRecordScreen extends StatefulWidget {
   const EditRecordScreen({
@@ -34,7 +37,7 @@ class _EditRecordScreenState extends State<EditRecordScreen> {
     return _controllers.values.any((controller) => controller.text.isNotEmpty);
   }
 
-  void _updateRecord() {
+  Future<void> _updateRecord() async {
     final updatedPayloadData = widget.record.payload.data.map((payloadData) {
       return PayloadData(
         name: payloadData.name,
@@ -52,6 +55,16 @@ class _EditRecordScreenState extends State<EditRecordScreen> {
       phase: widget.record.phase,
       payload: Payload(data: updatedPayloadData),
     );
+
+    final MessageService messageService = MessageService();
+    final company = await UserPreferences.getCompanyId();
+    final user = await UserPreferences.getUsername();
+    final cropId = widget.record.cropId;
+    final phase = widget.record.phase;
+    final recordId = widget.record.id;
+    final message = "$user esta solicitando corregir un registro";
+    Payload payload = Payload(data: updatedPayloadData);
+    await messageService.sendMessage(company as String, message, 'edited', cropId, phase, recordId: recordId, payload: payload, differences: payload.getDifferences(widget.record.payload));
 
     widget.updateRecord(updatedRecord);
     Navigator.pop(context, updatedRecord);

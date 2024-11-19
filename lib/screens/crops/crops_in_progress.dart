@@ -45,8 +45,11 @@ class _CropsInProgressState extends State<CropsInProgress> {
                 phase: stringToCropCurrentPhase(crop.phase),
                 name: crop.name,
                 state: crop.state,
-                onDelete: (String
-                    id) {}, //its only there as a placeholder it really does nothing as it shouldn't be able to delete from the crops in progress
+                onDelete: () async {
+                  setState(() {
+                    cropCards.removeWhere((card) => card.id == crop.id);
+                  });
+                }, //its only there as a placeholder it really does nothing as it shouldn't be able to delete from the crops in progress
               ))
           .toList();
     });
@@ -69,6 +72,12 @@ class _CropsInProgressState extends State<CropsInProgress> {
     String reconstructedDate = '$year-$month-$day';
     DateTime parsedDate = DateTime.parse(reconstructedDate);
     return '${parsedDate.year}-${parsedDate.month.toString().padLeft(2, '0')}-${parsedDate.day.toString().padLeft(2, '0')}';
+  }
+
+  Future<void> removeCrop(String id) async {
+    setState(() {
+      cropCards.removeWhere((card) => card.id == id);
+    });
   }
 
   @override
@@ -148,7 +157,7 @@ class _CropsInProgressState extends State<CropsInProgress> {
                     phase: stringToCropCurrentPhase(newCrop.phase),
                     name: newCrop.name,
                     state: newCrop.state,
-                    onDelete: (String id) {},
+                    onDelete: () => removeCrop(newCrop.id),
                   ));
                 });
               }

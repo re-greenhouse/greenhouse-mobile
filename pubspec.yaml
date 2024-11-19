@@ -27,6 +27,7 @@ dependencies:
   image_picker: ^1.1.2
   firebase_core: ^3.7.0
   firebase_storage: ^12.3.5
+  stomp_dart_client: ^2.1.0
 
 dev_dependencies:
   flutter_test:

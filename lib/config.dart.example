@@ -9,4 +9,5 @@ class Config {
   static const String windowsApiKey = '';
   static const String appId = '';
   static const String messagingSenderId = '';
+  static const String wsActiveMQ = 'wss://::61619';
 }

@@ -25,11 +25,16 @@ class _DashboardState extends State<Dashboard> {
   Future<void> loadRecords() async {
     try {
       records = await recordService.getRecords();
-      print("Records loaded: $records");
       setState(() {});
     } catch (e) {
       print('Failed to load records: $e');
     }
+  }
+
+  void removeRecord(String recordId) {
+    setState(() {
+      records.removeWhere((record) => record.id == recordId);
+    });
   }
 
   @override
@@ -74,14 +79,14 @@ class _DashboardState extends State<Dashboard> {
                       Navigator.pushNamed(context, '/crops-archive');
                     },
                     svgAsset: 'assets/icons/archive.svg',
-                    buttonText: 'Crops\nArchive',
+                    buttonText: 'Finalized\nCrops',
                   ),
                   DashboardButton(
                     onPressed: () {
-                      Navigator.pushNamed(context, '/crops-graphics');
+                      Navigator.pushNamed(context, '/company-profile');
                     },
                     svgAsset: 'assets/icons/statistics.svg',
-                    buttonText: 'Statistical\nReports',
+                    buttonText: 'My\nCompany',
                   ),
                 ],
               ),
@@ -90,7 +95,10 @@ class _DashboardState extends State<Dashboard> {
                 'Recent records',
                 style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
               ),
-              ...records.map((record) => RecordCard(record: record)),
+              ...records.map((record) => RecordCard(
+                    record: record,
+                    onDelete: () => removeRecord(record.id),
+                  )),
             ],
           ),
         ),
