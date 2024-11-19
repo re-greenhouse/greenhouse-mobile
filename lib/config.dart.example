@@ -1,8 +1,12 @@
 class Config {
-  static const String baseUrl =
-      '';
-  static const String ultralytics =
-      '';
-  static const String modelUrl =
-      '';
+  static const String baseUrl = '';
+  static const String ultralytics = '';
+  static const String modelUrl = '';
+  static const String webApiKey = '';
+  static const String androidApiKey = '';
+  static const String iosApiKey = '';
+  static const String macosApiKey = '';
+  static const String windowsApiKey = '';
+  static const String appId = '';
+  static const String messagingSenderId = '';
 }

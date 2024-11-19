@@ -5,6 +5,7 @@ import 'package:greenhouse/screens/camera/camera_screen.dart';
 import 'package:greenhouse/screens/camera/image_view_screen.dart';
 import 'package:greenhouse/services/crop_service.dart';
 import 'package:greenhouse/services/ia_service.dart';
+import 'package:greenhouse/services/upload_image_service.dart';
 import 'package:greenhouse/widgets/bottom_navigation_bar.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -149,6 +150,7 @@ class _StepperTitleState extends State<StepperTitle> {
   List<XFile?> images = [];
   final imagePicker = ImagePicker();
   final IAService iaService = IAService();
+  final CropService cropService = CropService();
   bool isAnalyzed = false;
 
   @override
@@ -233,6 +235,7 @@ class _StepperTitleState extends State<StepperTitle> {
 
   Future<void> _showInferenceDialog(XFile? imageFile) async {
     if (imageFile == null) return;
+    final url = await uploadImage(File(imageFile.path));
 
     showDialog(
       context: context,
@@ -256,6 +259,7 @@ class _StepperTitleState extends State<StepperTitle> {
                 return Text("Error: ${snapshot.error}");
               } else {
                 _saveCropQuality(snapshot.data!, imageFile.path);
+                widget.cropService.updateImageAndQuality(widget.crop.id, snapshot.data!, url);
                 return Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
